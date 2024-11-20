@@ -1,6 +1,12 @@
-"""Event Ticketing System"""
+"""Event Ticketing System
+Uses a min heap to keep order of users
+
+Removing ticket
+"""
+import csv
 import datetime
 import heapq
+
 from collections import deque
 from random import choice, randint, sample
 
@@ -16,6 +22,7 @@ class TicketSystem:
         self.n_vip = n_vip
         self.n_regular = n_regular
         self.tickets = []  # The starting priority queue
+        self.rank = 0
 
 
     def process_tickets(self):
@@ -30,12 +37,17 @@ class TicketSystem:
         """
         return len(self.tickets)
 
+class LoggingSystem:
+    """Class to log ticket events"""
+    def __init__(self):
+        pass
+
 class User:
     """The User class"""
     users = deque()
 
     def __init__(self, name, ticket):
-        pass
+        self.active = False
 
     def x(self):
         """Hi"""
