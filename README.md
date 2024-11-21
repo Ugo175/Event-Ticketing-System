@@ -25,9 +25,9 @@ The Event Ticketing System is designed to:
 
 ### Data Structures Used
 
-- **Queues**: Separate queues manage VIP and Regular ticket requests.
+- **Priority Queues**: Separate queues manage VIP and Regular ticket requests.
 - **Dictionaries**: Used for storing ticket availability and user details.
-- **CSV Logging**: Transactions are stored in a CSV file for easy tracking.
+- **File Logging**: Transactions are stored in a text file for easy tracking.
 
 ### Run the Python script:
 
