@@ -8,7 +8,6 @@ Removing ticket
 import csv
 import datetime
 import heapq
-import datetime
 
 from random import sample
 from string import ascii_lowercase
@@ -47,13 +46,13 @@ Welcome to our Event Ticketing System. Enter a number to begin.
 2. Login to make changes
 """)
         user_action = valid_input(">>> ", {'1', '2'})
-        match user_action:
-            case '1':
-                User.register(ticket_system)
-            case '2':
-                pass
-        # if user_action == '1':
-        #     User.register(ticket_system)
+        # match user_action:
+        #     case '1':
+        #         User.register(ticket_system)
+        #     case '2':
+        #         pass
+        if user_action == '1':
+            User.register(ticket_system)
 
     # process tickets
     while ticket_system.tickets:
@@ -66,8 +65,6 @@ class User:
     id_length = 5
 
     def __init__(self, name, ticket, priority):
-        file = open("log.txt", "w")
-        file.close()
         self.name = name
         self.ticket = ticket
         self.priority = priority
@@ -88,19 +85,16 @@ class User:
 
         # Check if user can still register
         ticket_type_attr = "n_"+ticket_type.lower()
+
         other_type = TicketSystem.VIP
         if ticket_type == TicketSystem.VIP:
             other_type = TicketSystem.REGULAR
         
         # Was this for debugging purposes?
-        # print(getattr(ticket_system, ticket_type_attr))
+        print(getattr(ticket_system, ticket_type_attr))
         
         if getattr(ticket_system, ticket_type_attr) >=\
               getattr(TicketSystem, ticket_type_attr.upper()):
-            # log this information as well
-            with open("log.txt", "a") as file:
-                file.write(f"""User {name} tried to register at {datetime.datetime.now()}
-                            but {ticket_type} tickets are sold out.\n""")
             print(f"""{ticket_type} tickets are sold out now.
 Would you like to get a {other_type} ticket instead?
 1. Yes
@@ -117,9 +111,7 @@ Would you like to get a {other_type} ticket instead?
         user = User(name, ticket_type, ticket_system.new_priority)
         ticket_system.new_priority += 1
         ticket_system.add_ticket(user)
-        print(f"{ticket_system.new_priority}")
-        with open("log.txt", "a") as file:
-                file.write(f"""User {name} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
+
         # generateid
 
 
@@ -168,6 +160,7 @@ class TicketSystem:
         n_ticket_type = getattr(self, ticket_type_attr)
         setattr(self, ticket_type_attr, n_ticket_type+1)
         heapq.heappush(self.tickets, (user.priority, user.user_id))
+        # log this transaction to the file
 
 
     # what exactly are we using this for right now?
