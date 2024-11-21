@@ -3,35 +3,12 @@ Uses a min heap to keep order of users
 
 Removing ticket
 """
-import csv
 import datetime
 import heapq
 
 from random import sample
 from string import ascii_lowercase
 
-
-print("""
-Register
-Login
-
-Register
-    generate Id, log off
-    if ticket for type_ticket:
-        sugguest other
-            if not want other
-            sorry. bye.
-    Give ticket
-    If NO MORE TICKET:
-        process all.
-
-Login.
-    Cancel
-    downgrade/upgrade if this else downgrde
-
-    if vip full - can't do
-
-""")
 
 def main():
     """Code starts execution here"""
@@ -49,21 +26,21 @@ Welcome to our Event Ticketing System. Enter a number to begin.
                 user = User.login()
                 if user is None:
                     print("No user_id with that account exists! Consider creating an account")
-                    break
+                    continue
                 print(f"""
 Hey {user.name}!
 What changes do you want to make to your ticket registration?
-1. Cancel
+1. Cancel registration
 2. {user.change}
-3. Summary
+3. View summary
 4. Log out
 """)
-                change_action = valid_input(">>> ", )
+                change_action = valid_input(">>> ", {'1', '2', '3', '4'})
                 match change_action:
                     case '1':
-                        user.cancel()
+                        user.cancel(ticket_system)
                     case '2':
-                        user.make_change()
+                        user.make_change(ticket_system)
                     case '3':
                         user.summarize()
                     case '4':
@@ -72,8 +49,7 @@ What changes do you want to make to your ticket registration?
                 User.register(ticket_system)
 
     # process tickets
-    while ticket_system.tickets:
-        print(heapq.heappop(ticket_system))
+    ticket_system.process_tickets()
 
 
 class TicketSystem:
@@ -110,14 +86,36 @@ class TicketSystem:
     def process_tickets(self):
         """Process from the priority queue from first to last
         Preferring VIPs first
+        The first part of elements in the heapq is the priority
+        higher number means low priority
         """
-        return 3
+        while self.tickets:
+            priority, user_id = heapq.heappop(self.tickets)
+            print(priority)
+            if user_id not in User.users:
+                continue
+            user = User.users[user_id]
+            print(f"Processed {user.name}'s {user.ticket} ticket")
+
+
+    def is_available(self, ticket_type):
+        """Method that tells whether ticket can be changed or not"""
+        new_ticket_attr = 'n_'+ticket_type.lower()
+        return getattr(self, new_ticket_attr) < \
+              getattr(TicketSystem, new_ticket_attr.upper())
 
     @property
     def n_tickets(self):
         """return the number of tickets
         """
         return self.n_regular+self.n_vip
+    
+    @staticmethod
+    def switch_ticket(ticket):
+        """Returns the other type of ticket, limits DRY"""
+        return TicketSystem.REGULAR \
+            if ticket == TicketSystem.VIP else TicketSystem.VIP
+
 
 
 class User:
@@ -133,7 +131,6 @@ class User:
         # The PriorityQueue will pop it only after all VIPs processed
         if self.ticket == TicketSystem.REGULAR:
             self.priority *= TicketSystem.N_TOTAL*5
-        self.active = False
         self.user_id = User.make_id()
         User.users[self.user_id] = self
 
@@ -143,11 +140,14 @@ class User:
         ticket_system.remove_ticket(self.ticket)
         print("Your registration has been canceled successfully")
 
-    def make_change(self):
+    def make_change(self, ticket_system):
         """Upgrade/Downgrade ticket"""
-        self.ticket = TicketSystem.REGULAR \
-            if self.ticket == TicketSystem.VIP else TicketSystem.VIP
-        print(f"You have successfully changed your ticket type to {self.ticket}")
+        new_ticket = TicketSystem.switch_ticket(self.ticket)
+        if ticket_system.is_available(new_ticket):
+            self.ticket = new_ticket
+            print(f"You have successfully changed your ticket type to {self.ticket}")
+        else:
+            print("Sorry, but you cannot change your ticket type at this time")
 
     def summarize(self):
         """Provide summary for this user"""
@@ -164,15 +164,14 @@ You have registered for a {self.ticket} ticket.
     def change(self):
         """The type of change that can be made for this user"""
         change_prefix = "Down" if self.ticket == TicketSystem.VIP else "Up"
-        new_ticket_type = TicketSystem.REGULAR \
-            if self.ticket == TicketSystem.VIP else TicketSystem.VIP
+        new_ticket_type = TicketSystem.switch_ticket(self.ticket)
         return f"{change_prefix}grade to {new_ticket_type}"
 
     @staticmethod
     def login() -> set | None:
         """Log user in"""
         user_id = valid_input("Enter your user id: ")
-        if user_id in User.users and User.users[user_id].active:
+        if user_id in User.users:
             return User.users[user_id]
         return None
 
@@ -181,17 +180,12 @@ You have registered for a {self.ticket} ticket.
         """Class method to add a new user"""
         name = valid_input("Enter your name: ")
         ticket_type = valid_input(
-            "Enter ticket type ('VIP'/'REGULAR'): ", valid=TicketSystem.TICKET_TYPES, upper=True)
+            "Enter ticket type ('VIP'/'REGULAR'): ",
+              valid=TicketSystem.TICKET_TYPES, upper=True)
+        other_type = TicketSystem.switch_ticket(ticket_type)
 
         # Check if user can still register
-        ticket_type_attr = "n_"+ticket_type.lower()
-
-        other_type = TicketSystem.VIP
-        if ticket_type == TicketSystem.VIP:
-            other_type = TicketSystem.REGULAR
-        print(getattr(ticket_system, ticket_type_attr))
-        if getattr(ticket_system, ticket_type_attr) >=\
-              getattr(TicketSystem, ticket_type_attr.upper()):
+        if not ticket_system.is_available(ticket_type):
             print(f"""{ticket_type} tickets are sold out now.
 Would you like to get a {other_type} ticket instead?
 1. Yes
