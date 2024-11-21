@@ -160,8 +160,10 @@ class TicketSystem:
         n_ticket_type = getattr(self, ticket_type_attr)
         setattr(self, ticket_type_attr, n_ticket_type+1)
         heapq.heappush(self.tickets, (user.priority, user.user_id))
+        # log this transaction to the file
 
 
+    # what exactly are we using this for right now?
     def process_tickets(self):
         """Process from the priority queue from first to last
         Preferring VIPs first
