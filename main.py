@@ -105,7 +105,7 @@ class TicketSystem:
                 continue
             user = User.users[user_id]
             print(f"Processed {user.name}'s {user.ticket} ticket")
-            LoggingSystem.log_processed_success(user.name, user.ticket)
+            LoggingSystem.log_processed_success(user.name, user.ticket, user.user_id)
 
     def is_available(self, ticket_type):
         """Method that tells whether ticket can be changed or not"""
@@ -252,10 +252,15 @@ Your user id is '{user.user_id}'. You can use it to login and change your detail
 def valid_input(prompt: str="Input: ", valid: set=None, upper: bool=False) -> str:
     """Function to persist until valid input gotten"""
     answer = ""
-    while answer == "" or (valid and answer not in valid):
-        answer = input(prompt)
+    while answer == "":
+        answer = input(prompt).strip()
         if upper:
             answer = answer.upper()
+        if answer == "":
+            print("You need to enter something to continue")
+        if valid and answer not in valid:
+            print(f"You entered invalid input, enter one of {valid}")
+            answer = ""
     return answer
 
 
@@ -302,7 +307,6 @@ class LoggingSystem:
         """Clear log file"""
         with open("udd_log.txt", 'w', encoding="utf-8") as file:
             file.write("")
-
 
 if __name__ == "__main__":
     main()
