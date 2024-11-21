@@ -55,8 +55,8 @@ What changes do you want to make to your ticket registration?
 
 class TicketSystem:
     """The ticket management class - will have only one instance"""
-    N_VIP = 2
-    N_REGULAR = 3
+    N_VIP = 3
+    N_REGULAR = 7
     N_TOTAL = N_VIP+N_REGULAR
     VIP = "VIP"
     REGULAR = "REGULAR"
@@ -274,10 +274,10 @@ class LoggingSystem:
             file.write(f"""User {name} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
 
     @staticmethod
-    def log_processed_success(name, ticket_type):
+    def log_processed_success(name, ticket_type, user_id):
         """Log proccessed user"""
         with open("udd_log.txt", 'a', encoding="utf-8") as file:
-            file.write(f"""User {name}'s {ticket_type} ticket was processed at {datetime.datetime.now()}.\n""")
+            file.write(f"""User {name}'s {ticket_type} ticket with ID {user_id} was processed at {datetime.datetime.now()}.\n""")
 
     @staticmethod
     def log_requested_summary(name):
