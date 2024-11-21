@@ -54,8 +54,8 @@ What changes do you want to make to your ticket registration?
 
 class TicketSystem:
     """The ticket management class - will have only one instance"""
-    N_VIP = 3
-    N_REGULAR = 7
+    N_VIP = 2
+    N_REGULAR = 3
     N_TOTAL = N_VIP+N_REGULAR
     VIP = "VIP"
     REGULAR = "REGULAR"
@@ -109,7 +109,7 @@ class TicketSystem:
         """return the number of tickets
         """
         return self.n_regular+self.n_vip
-    
+
     @staticmethod
     def switch_ticket(ticket):
         """Returns the other type of ticket, limits DRY"""
@@ -186,6 +186,7 @@ You have registered for a {self.ticket} ticket.
 
         # Check if user can still register
         if not ticket_system.is_available(ticket_type):
+            LoggingSystem.log_register_failure(name, ticket_type)
             print(f"""{ticket_type} tickets are sold out now.
 Would you like to get a {other_type} ticket instead?
 1. Yes
@@ -201,6 +202,7 @@ Would you like to get a {other_type} ticket instead?
         user = User(name, ticket_type, ticket_system.new_priority)
         ticket_system.new_priority += 1
         ticket_system.add_ticket(user)
+        LoggingSystem.log_register_success(name, ticket_type)
         print(f"""
 Hey {user.name}! Your {user.ticket} ticket request is being processed.
 Your user id is '{user.user_id}'. You can use it to login and change your details.
@@ -228,8 +230,24 @@ def valid_input(prompt: str="Input: ", valid: set=None, upper: bool=False) -> st
 
 class LoggingSystem:
     """Class to log ticket events"""
-    def __init__(self):
-        pass
+    @staticmethod
+    def log_register_failure(name, ticket_type):
+        """Log registration failure"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name} tried to register at {datetime.datetime.now()} but {ticket_type} tickets are sold out.\n""")
+
+    @staticmethod
+    def log_register_success(name, ticket_type):
+        """Log registration success"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
+
+    @staticmethod
+    def log_processed_success(name, ticket_type):
+        """Log proccessed user"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name}'s {ticket_type} ticket was processed at {datetime.datetime.now()}.\n""")
+  
 
 if __name__ == "__main__":
     main()
