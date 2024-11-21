@@ -13,6 +13,7 @@ from string import ascii_lowercase
 def main():
     """Code starts execution here"""
     ticket_system = TicketSystem()
+    LoggingSystem.clear_log()
 
     while ticket_system.n_tickets < ticket_system.N_TOTAL:
         print("""
@@ -59,7 +60,6 @@ class TicketSystem:
     N_TOTAL = N_VIP+N_REGULAR
     VIP = "VIP"
     REGULAR = "REGULAR"
-    REG_ACTIONS = {'1', '2'}
     TICKET_TYPES = {VIP, REGULAR}
 
     def __init__(self):
@@ -70,12 +70,22 @@ class TicketSystem:
         # Stop this from having more calls
         TicketSystem.__init__ = lambda *args: None
 
+    def change_ticket(self, ticket_type: str):
+        """Function to increase/reduce the number of ticket counts in counters"""
+        for ticket_type_str in TicketSystem.TICKET_TYPES:
+            ticket_type_attr = "n_"+ticket_type_str.lower()
+            n_ticket_type = getattr(self, ticket_type_attr)
+            # Increase if this is the current ticket section. Else decrease False: 0, True: 1
+            setattr(self, ticket_type_attr
+                    , n_ticket_type+(-1, 1)[ticket_type == ticket_type_str])
+
+
     def add_ticket(self, user):
         """Function to add a ticket/user to the heap"""
         ticket_type_attr = "n_"+user.ticket.lower()
         n_ticket_type = getattr(self, ticket_type_attr)
         setattr(self, ticket_type_attr, n_ticket_type+1)
-        heapq.heappush(self.tickets, (user.priority, user.user_id))
+        heapq.heappush(self.tickets, [user.priority, user.user_id])
 
     def remove_ticket(self, ticket_type: str):
         """Function to subtract from ticket count"""
@@ -90,19 +100,31 @@ class TicketSystem:
         higher number means low priority
         """
         while self.tickets:
-            priority, user_id = heapq.heappop(self.tickets)
-            print(priority)
+            user_id = heapq.heappop(self.tickets)[1]
             if user_id not in User.users:
                 continue
             user = User.users[user_id]
             print(f"Processed {user.name}'s {user.ticket} ticket")
-
+            LoggingSystem.log_processed_success(user.name, user.ticket)
 
     def is_available(self, ticket_type):
         """Method that tells whether ticket can be changed or not"""
         new_ticket_attr = 'n_'+ticket_type.lower()
         return getattr(self, new_ticket_attr) < \
               getattr(TicketSystem, new_ticket_attr.upper())
+
+    def change_priority(self, user):
+        """Code to change the priority of a user's process
+        Optimal way would require bubbling through the heap"""
+        old_priority = user.priority
+        for ticket_tuple in self.tickets:
+            priority = ticket_tuple[0]
+            if priority == old_priority:
+                self.new_priority += 1
+                user.priority = self.new_priority
+                user.prioritize()
+                ticket_tuple[0] = user.priority
+                heapq.heapify(self.tickets)
 
     @property
     def n_tickets(self):
@@ -129,23 +151,31 @@ class User:
         self.priority = priority
         # If it is regular, give it high position, so that
         # The PriorityQueue will pop it only after all VIPs processed
-        if self.ticket == TicketSystem.REGULAR:
-            self.priority *= TicketSystem.N_TOTAL*5
+        self.prioritize()
         self.user_id = User.make_id()
         User.users[self.user_id] = self
+
+    def prioritize(self):
+        """Set priority for regular user"""
+        if self.ticket == TicketSystem.REGULAR:
+            self.priority *= TicketSystem.N_TOTAL*5
 
     def cancel(self, ticket_system):
         """Remove user from list of ticket registered users"""
         del User.users[self.user_id]  # Instead of setting 'active'
         ticket_system.remove_ticket(self.ticket)
         print("Your registration has been canceled successfully")
+        LoggingSystem.log_canceled_ticket(self.name)
 
     def make_change(self, ticket_system):
         """Upgrade/Downgrade ticket"""
         new_ticket = TicketSystem.switch_ticket(self.ticket)
         if ticket_system.is_available(new_ticket):
             self.ticket = new_ticket
+            ticket_system.change_priority(self)
+            ticket_system.change_ticket(self.ticket)
             print(f"You have successfully changed your ticket type to {self.ticket}")
+            LoggingSystem.log_changed_ticket(self.name, self.ticket)
         else:
             print("Sorry, but you cannot change your ticket type at this time")
 
@@ -159,6 +189,7 @@ You have registered for a {self.ticket} ticket.
  else 'It\'s great that you chose to attend this event!'}
 
 """)
+        LoggingSystem.log_requested_summary(self.name)
 
     @property
     def change(self):
@@ -191,11 +222,11 @@ You have registered for a {self.ticket} ticket.
 Would you like to get a {other_type} ticket instead?
 1. Yes
 2. No""")
-            if valid_input(">>> ", {'1', '2'}) == '1':
-                ticket_type = other_type
-            else:
+            ticket_action = valid_input(">>> ", {'1', '2'})
+            if ticket_action == '2':
                 print("Thank you for your time! Good bye!")
-
+                return
+            ticket_type = other_type
         # Instead of the new_priority to be the number of users
         # Make a new class variable to keep track
         # - users might cancel, that will reduce number
@@ -247,7 +278,31 @@ class LoggingSystem:
         """Log proccessed user"""
         with open("udd_log.txt", 'a', encoding="utf-8") as file:
             file.write(f"""User {name}'s {ticket_type} ticket was processed at {datetime.datetime.now()}.\n""")
-  
+
+    @staticmethod
+    def log_requested_summary(name):
+        """Log proccessed user"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name}'s requested summary at {datetime.datetime.now()}.\n""")
+
+    @staticmethod
+    def log_changed_ticket(name, ticket_type):
+        """Log user changed ticket"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name}'s ticket was changed to {ticket_type} at {datetime.datetime.now()}.\n""")
+
+    @staticmethod
+    def log_canceled_ticket(name):
+        """Log canceled ticket"""
+        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+            file.write(f"""User {name}'s canceled ticket at {datetime.datetime.now()}.\n""")
+
+    @staticmethod
+    def clear_log():
+        """Clear log file"""
+        with open("udd_log.txt", 'w', encoding="utf-8") as file:
+            file.write("")
+
 
 if __name__ == "__main__":
     main()
