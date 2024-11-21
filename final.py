@@ -195,6 +195,7 @@ Would you like to get a {other_type} ticket instead?
                 ticket_type = other_type
             else:
                 print("Thank you for your time! Good bye!")
+                return
 
         # Instead of the new_priority to be the number of users
         # Make a new class variable to keep track
