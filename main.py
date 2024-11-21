@@ -1,4 +1,6 @@
-"""Event Ticketing System
+"""
+Event Ticketing System
+
 Uses a min heap to keep order of users
 
 Removing ticket
@@ -44,11 +46,13 @@ Welcome to our Event Ticketing System. Enter a number to begin.
 2. Login to make changes
 """)
         user_action = valid_input(">>> ", {'1', '2'})
-        match user_action:
-            case '1':
-                User.register(ticket_system)
-            case '2':
-                pass
+        # match user_action:
+        #     case '1':
+        #         User.register(ticket_system)
+        #     case '2':
+        #         pass
+        if user_action == '1':
+            User.register(ticket_system)
 
     # process tickets
     while ticket_system.tickets:
@@ -85,7 +89,10 @@ class User:
         other_type = TicketSystem.VIP
         if ticket_type == TicketSystem.VIP:
             other_type = TicketSystem.REGULAR
+        
+        # Was this for debugging purposes?
         print(getattr(ticket_system, ticket_type_attr))
+        
         if getattr(ticket_system, ticket_type_attr) >=\
               getattr(TicketSystem, ticket_type_attr.upper()):
             print(f"""{ticket_type} tickets are sold out now.
