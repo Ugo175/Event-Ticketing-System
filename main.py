@@ -56,7 +56,7 @@ What changes do you want to make to your ticket registration?
 class TicketSystem:
     """The ticket management class - will have only one instance"""
     N_VIP = 3
-    N_REGULAR = 7
+    N_REGULAR = 6
     N_TOTAL = N_VIP+N_REGULAR
     VIP = "VIP"
     REGULAR = "REGULAR"
@@ -175,7 +175,7 @@ class User:
             ticket_system.change_priority(self)
             ticket_system.change_ticket(self.ticket)
             print(f"You have successfully changed your ticket type to {self.ticket}")
-            LoggingSystem.log_changed_ticket(self.name, self.ticket)
+            LoggingSystem.log_changed_ticket(self.name, self.ticket, self.user_id)
         else:
             print("Sorry, but you cannot change your ticket type at this time")
 
@@ -189,7 +189,7 @@ You have registered for a {self.ticket} ticket.
  else 'It\'s great that you chose to attend this event!'}
 
 """)
-        LoggingSystem.log_requested_summary(self.name)
+        LoggingSystem.log_requested_summary(self.name, self.user_id)
 
     @property
     def change(self):
@@ -233,7 +233,7 @@ Would you like to get a {other_type} ticket instead?
         user = User(name, ticket_type, ticket_system.new_priority)
         ticket_system.new_priority += 1
         ticket_system.add_ticket(user)
-        LoggingSystem.log_register_success(name, ticket_type)
+        LoggingSystem.log_register_success(name, ticket_type, user.user_id)
         print(f"""
 Hey {user.name}! Your {user.ticket} ticket request is being processed.
 Your user id is '{user.user_id}'. You can use it to login and change your details.
@@ -266,46 +266,47 @@ def valid_input(prompt: str="Input: ", valid: set=None, upper: bool=False) -> st
 
 class LoggingSystem:
     """Class to log ticket events"""
+    TICKET_LOG_FILE = "udd_log.txt"
     @staticmethod
     def log_register_failure(name, ticket_type):
         """Log registration failure"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
             file.write(f"""User {name} tried to register at {datetime.datetime.now()} but {ticket_type} tickets are sold out.\n""")
 
     @staticmethod
-    def log_register_success(name, ticket_type):
+    def log_register_success(name, ticket_type, user_id):
         """Log registration success"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
-            file.write(f"""User {name} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
+            file.write(f"""User {name} and id {user_id} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
 
     @staticmethod
     def log_processed_success(name, ticket_type, user_id):
         """Log proccessed user"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
             file.write(f"""User {name}'s {ticket_type} ticket with ID {user_id} was processed at {datetime.datetime.now()}.\n""")
 
     @staticmethod
-    def log_requested_summary(name):
+    def log_requested_summary(name, user_id):
         """Log proccessed user"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
-            file.write(f"""User {name}'s requested summary at {datetime.datetime.now()}.\n""")
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
+            file.write(f"""User {name} and id {user_id} requested summary at {datetime.datetime.now()}.\n""")
 
     @staticmethod
-    def log_changed_ticket(name, ticket_type):
+    def log_changed_ticket(name, ticket_type, user_id):
         """Log user changed ticket"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
-            file.write(f"""User {name}'s ticket was changed to {ticket_type} at {datetime.datetime.now()}.\n""")
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
+            file.write(f"""User {name}'s ticket having id {user_id} was changed to {ticket_type} at {datetime.datetime.now()}.\n""")
 
     @staticmethod
     def log_canceled_ticket(name):
         """Log canceled ticket"""
-        with open("udd_log.txt", 'a', encoding="utf-8") as file:
+        with open(LoggingSystem.TICKET_LOG_FILE, 'a', encoding="utf-8") as file:
             file.write(f"""User {name}'s canceled ticket at {datetime.datetime.now()}.\n""")
 
     @staticmethod
     def clear_log():
         """Clear log file"""
-        with open("udd_log.txt", 'w', encoding="utf-8") as file:
+        with open(LoggingSystem.TICKET_LOG_FILE, 'w', encoding="utf-8") as file:
             file.write("")
 
 if __name__ == "__main__":
