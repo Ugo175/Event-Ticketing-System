@@ -57,6 +57,7 @@ Welcome to our Event Ticketing System. Enter a number to begin.
 
     # process tickets
     while ticket_system.tickets:
+        #process tickets
         print(heapq.heappop(ticket_system))
 
 
@@ -66,6 +67,7 @@ class User:
     id_length = 5
 
     def __init__(self, name, ticket, priority):
+        # prepare to log info
         file = open("log.txt", "w")
         file.close()
         self.name = name
@@ -120,7 +122,7 @@ Would you like to get a {other_type} ticket instead?
         print(f"{ticket_system.new_priority}")
         with open("log.txt", "a") as file:
                 file.write(f"""User {name} registered a {ticket_type} ticket at {datetime.datetime.now()}.\n""")
-        # generateid
+
 
 
     @staticmethod
