@@ -6,6 +6,7 @@ A Python-based application for managing a simple event ticketing system. This sy
 
 ## Project Overview
 
+
 The Event Ticketing System is designed to:
 - Manage ticket purchases for an event, giving priority to VIP ticket holders.
 - Track ticket availability in real time, displaying updated counts.
